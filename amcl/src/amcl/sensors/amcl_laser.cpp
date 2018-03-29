@@ -793,6 +793,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
         if (print){
           obs_scan_string << "nan" << ",";
           norm_obs_sstr << "nan" << ",";
+          map_scan_string << map_array[i] << ",";
         }
         continue;
       }
@@ -801,6 +802,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
       if (print){
         obs_scan_string << obs_array[i] << ",";
         norm_obs_sstr << obs_range << ",";
+        map_scan_string << map_array[i] << ",";
       }
 
       // ROS_INFO("%f", obs_range);
@@ -849,6 +851,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
       output_file << "," << pose.v[0] <<  "," << pose.v[1] << "," << pose.v[2];
       output_file << "," << obs_scan_string.str();
       output_file << "," << norm_obs_sstr.str();
+      output_file << "," << map_scan_string.str();
       output_file << score_str.str();
       output_file << endl;
       output_file.close();
