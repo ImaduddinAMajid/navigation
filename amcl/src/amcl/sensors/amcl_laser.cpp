@@ -787,26 +787,6 @@ for (int idx = 0; idx < data->range_count; idx += step)
       // obs_bearing = data->ranges[i][1];
       // fprintf(stderr, "%f, %f\n", obs_array[i], map_array[i]);
       
-      // TODO: Kinect -> obs_range_max, NN -> skip
-      if(isnan(obs_array[i]))
-      {
-        if (print){
-          obs_scan_string << "nan" << ",";
-          norm_obs_sstr << "nan" << ",";
-          map_scan_string << map_array[i] << ",";
-        }
-        continue;
-      }
-        // obs_range = obs_range_max;
-      obs_range = (obs_array[i]- obs_range_mean) / sqrt(obs_range_var);
-      if (print){
-        obs_scan_string << obs_array[i] << ",";
-        norm_obs_sstr << obs_range << ",";
-        map_scan_string << map_array[i] << ",";
-      }
-
-      // ROS_INFO("%f", obs_range);
-      
       // In a kinect mode if it is NaN set it to 0
       // if(isnan(obs_range))
       //   obs_range=0;
@@ -818,8 +798,31 @@ for (int idx = 0; idx < data->range_count; idx += step)
       //   fprintf(stderr, "map_range_mean, map_range_var, index = %f, %f, %d \n", map_range_mean, map_range_var, i);
       if (isnan(map_range))
         map_range = obs_range_max;
-      pz = 0.0;
       
+
+
+      // TODO: Kinect -> obs_range_max, NN -> skip
+      if(isnan(obs_array[i]))
+      {
+        if (print){
+          obs_scan_string << "nan" << ",";
+          norm_obs_sstr << "nan" << ",";
+          map_scan_string << map_array[i] << ",";
+          norm_map_sstr << map_range << ",";
+        }
+        continue;
+      }
+        // obs_range = obs_range_max;
+      obs_range = (obs_array[i]- obs_range_mean) / sqrt(obs_range_var);
+      if (print){
+        obs_scan_string << obs_array[i] << ",";
+        norm_obs_sstr << obs_range << ",";
+        map_scan_string << map_array[i] << ",";
+        norm_map_sstr << map_range << ",";
+      }
+
+      pz = 0.0;
+
       // Part 1: good, but noisy, hit
       z = obs_range - map_range;
       pz += self->z_hit * exp(-(z * z) / (2 * self->sigma_hit * self->sigma_hit));
@@ -852,6 +855,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
       output_file << "," << obs_scan_string.str();
       output_file << "," << norm_obs_sstr.str();
       output_file << "," << map_scan_string.str();
+      output_file << "," << norm_map_sstr.str();
       output_file << score_str.str();
       output_file << endl;
       output_file.close();
