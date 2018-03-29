@@ -799,7 +799,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
         // obs_range = obs_range_max;
       obs_range = (obs_array[i]- obs_range_mean) / sqrt(obs_range_var);
       if (print){
-        obs_scan_string << obs_array[idx] << ",";
+        obs_scan_string << obs_array[i] << ",";
         norm_obs_sstr << obs_range << ",";
       }
 
