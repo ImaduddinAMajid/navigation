@@ -561,17 +561,23 @@ double AMCLLaser::CustomBeamModel(AMCLLaserData *data, pf_sample_set_t* set)
   double mean_filter=0;//assigned initial value
   int counter = 0;
   const static int print_steps = -1;
+  static bool first = true;
   static int frame_id = 0;
   int inter_x, inter_y;
   ofstream output_file;
   ostringstream obs_scan_string, map_scan_string, norm_obs_sstr, norm_map_sstr, score_str;
   ostringstream mean_obs_sstr, mean_map_sstr;
   char buffer[64]; // The filename buffer.
-  
-  snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data_new/file%d.csv", frame_id);
+
+  snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data_new/data.csv");
   output_file.open(buffer, std::ios_base::app);
-  output_file << "AMCLDUMP,v0.1" << endl;
-  output_file << "FrameNo, ParticleNo, x, y, theta, ObsScan, NormObsScan, MapScan, NormMapScan" << endl;  
+
+  if (first){
+    output_file << "AMCLDUMP,v0.1" << endl;
+    output_file << "FrameNo, ParticleNo, x, y, theta, ObsScan, NormObsScan, MapScan, NormMapScan" << endl;
+    first = false;  
+  }
+
   self = (AMCLLaser*) data->sensor;
   obs_array = new double[data->range_count];
   map_array = new double[data->range_count];
