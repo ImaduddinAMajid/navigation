@@ -551,7 +551,7 @@ double AMCLLaser::CustomBeamModel(AMCLLaserData *data, pf_sample_set_t* set)
   double map_range;
   double obs_range, obs_bearing;
   double total_weight;
-  bool print = true;
+  const static bool print = true;
   pf_sample_t *sample;
   pf_vector_t pose;
   double *obs_array;
@@ -561,16 +561,17 @@ double AMCLLaser::CustomBeamModel(AMCLLaserData *data, pf_sample_set_t* set)
   double mean_filter=0;//assigned initial value
   int counter = 0;
   const static int print_steps = -1;
+  static int frame_id = 0;
+  int inter_x, inter_y;
   ofstream output_file;
   ostringstream obs_scan_string, map_scan_string, norm_obs_sstr, norm_map_sstr, score_str;
   ostringstream mean_obs_sstr, mean_map_sstr;
-  // freopen( "output.txt", "w", stdout );
-
-  // ROS_DEBUG("CUSTOM FIELD");
-  // fprintf(stdout, "CUSTOM FIELD");
-  // fprintf(stderr, "TESTING\n");
-  // fprintf(stderr, "%f, %f\n", obs_range, map_range);
-
+  char buffer[64]; // The filename buffer.
+  
+  snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data_new/file%d.csv", frame_id);
+  output_file.open(buffer, std::ios_base::app);
+  output_file << "AMCLDUMP,v0.1" << endl;
+  output_file << "FrameNo, ParticleNo, x, y, theta, ObsScan, NormObsScan, MapScan, NormMapScan" << endl;  
   self = (AMCLLaser*) data->sensor;
   obs_array = new double[data->range_count];
   map_array = new double[data->range_count];
@@ -631,7 +632,8 @@ for (int idx = 0; idx < data->range_count; idx += step)
   }
   obs_range_mean = obs_range_mean / counter;
   if(isnan(obs_range_mean))
-    return total_weight; 
+    assert(0);
+    // return total_weight; 
   // fprintf(stderr, "MEAN COUNTED\n");
   counter = 0;
   for (int idx=0; idx < data->range_count; idx += step){
@@ -647,7 +649,8 @@ for (int idx = 0; idx < data->range_count; idx += step)
   // fprintf(stderr, "mean, var, max = %f, %f, %f \n", obs_range_mean, obs_range_var, obs_range_max);
   if(isnan(obs_range_var)){
     fprintf(stderr, "SKIPPED\n");
-    return total_weight;
+    assert(0);
+    // return total_weight;
   }
   // counter=0;
   // for (int idx=0; idx < data->range_count; idx += step){
@@ -670,7 +673,7 @@ for (int idx = 0; idx < data->range_count; idx += step)
   {
     sample = set->samples + j;
     pose = sample->pose;
-
+    
     // Take account of the laser pose relative to the robot
     pose = pf_vector_coord_add(self->laser_pose, pose);
     // pose.v[0]=0; pose.v[1]=0;pose.v[2]=0;
@@ -683,8 +686,8 @@ for (int idx = 0; idx < data->range_count; idx += step)
 
     for (int idx = 0; idx < data->range_count; idx += step){
       obs_bearing = data->ranges[idx][1];
-      map_array[idx] = map_calc_range(self->map, pose.v[0], pose.v[1],
-        pose.v[2] + obs_bearing, data->range_max);
+      map_array[idx] = map_calc_rangexy(self->map, pose.v[0], pose.v[1],
+        pose.v[2] + obs_bearing, data->range_max, &inter_x, &inter_y);
       // fprintf(stderr, "%f\n", map_array[idx]);    
       if(map_range_max < map_array[idx] && map_array[idx] != data->range_max)
         map_range_max = map_array[idx];
@@ -845,12 +848,29 @@ for (int idx = 0; idx < data->range_count; idx += step)
 
     sample->weight *= p;
     total_weight += sample->weight;
+    // if (print){
+    //   char buffer[64]; // The filename buffer.
+    //   snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data/file%d.csv", j);
+    //   score_str << sample->weight;
+    //   output_file.open(buffer, std::ios_base::app);
+    //   output_file << j;
+    //   output_file << "," << pose.v[0] <<  "," << pose.v[1] << "," << pose.v[2];
+    //   output_file << "," << obs_scan_string.str();
+    //   output_file << "," << norm_obs_sstr.str();
+    //   output_file << "," << map_scan_string.str();
+    //   output_file << "," << norm_map_sstr.str();
+    //   output_file << score_str.str();
+    //   output_file << endl;
+    //   output_file.close();
+    //   obs_scan_string.flush();
+    //   norm_obs_sstr.flush();
+    //   map_scan_string.flush();
+    //   norm_map_sstr.flush();      
+    // }
     if (print){
-      char buffer[64]; // The filename buffer.
-      snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data/file%d.csv", j);
       score_str << sample->weight;
-      output_file.open(buffer, std::ios_base::app);
-      output_file << j;
+      output_file << frame_id;
+      output_file << "," << j;
       output_file << "," << pose.v[0] <<  "," << pose.v[1] << "," << pose.v[2];
       output_file << "," << obs_scan_string.str();
       output_file << "," << norm_obs_sstr.str();
@@ -858,11 +878,15 @@ for (int idx = 0; idx < data->range_count; idx += step)
       output_file << "," << norm_map_sstr.str();
       output_file << score_str.str();
       output_file << endl;
-      output_file.close();
+      obs_scan_string.str(std::string());
+      norm_obs_sstr.str(std::string());
+      map_scan_string.str(std::string());
+      norm_map_sstr.str(std::string());
+      frame_id++;
     }
-      
   }
   
+  output_file.close();
   delete [] obs_array;
   delete [] map_array;
   return(total_weight);

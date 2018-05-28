@@ -112,6 +112,15 @@ double map_calc_range(map_t *map, double ox, double oy, double oa, double max_ra
 
 
 /**************************************************************************
+ * Modified Range functions
+ **************************************************************************/
+
+// Extract a single range reading from the map
+double map_calc_rangexy(map_t *map, double ox, double oy, double oa, double max_range, int *inter_x, int *inter_y);
+
+
+
+/**************************************************************************
  * GUI/diagnostic functions
  **************************************************************************/
 
