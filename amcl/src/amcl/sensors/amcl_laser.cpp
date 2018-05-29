@@ -882,16 +882,17 @@ for (int idx = 0; idx < data->range_count; idx += step)
       output_file << "," << norm_obs_sstr.str();
       output_file << "," << map_scan_string.str();
       output_file << "," << norm_map_sstr.str();
-      output_file << score_str.str();
+      output_file << "," << score_str.str();
       output_file << endl;
       obs_scan_string.str(std::string());
       norm_obs_sstr.str(std::string());
       map_scan_string.str(std::string());
       norm_map_sstr.str(std::string());
-      frame_id++;
+      score_str.str(std::string());
+      
     }
   }
-  
+  frame_id++;
   output_file.close();
   delete [] obs_array;
   delete [] map_array;
