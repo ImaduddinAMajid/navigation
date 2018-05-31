@@ -566,7 +566,7 @@ double AMCLLaser::CustomBeamModel(AMCLLaserData *data, pf_sample_set_t* set)
   int inter_x, inter_y;
   ofstream output_file;
   ostringstream obs_scan_string, map_scan_string, norm_obs_sstr, norm_map_sstr, score_str;
-  ostringstream mean_obs_sstr, mean_map_sstr;
+  ostringstream mean_obs_sstr, mean_map_sstr, intersect_x, intersect_y;
   char buffer[64]; // The filename buffer.
 
   snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data_new/data.csv");
@@ -574,7 +574,7 @@ double AMCLLaser::CustomBeamModel(AMCLLaserData *data, pf_sample_set_t* set)
 
   if (first){
     output_file << "AMCLDUMP,v0.1" << endl;
-    output_file << "FrameNo, ParticleNo, x, y, theta, ObsScan, NormObsScan, MapScan, NormMapScan" << endl;
+    output_file << "FrameNo, ParticleNo, x, y, theta, ObsScan, NormObsScan, MapScan, NormMapScan, IntersectX, IntersectY, Score" << endl;
     first = false;  
   }
 
@@ -697,6 +697,8 @@ for (int idx = 0; idx < data->range_count; idx += step)
       // fprintf(stderr, "%f\n", map_array[idx]);    
       if(map_range_max < map_array[idx] && map_array[idx] != data->range_max)
         map_range_max = map_array[idx];
+      intersect_x << inter_x << ",";
+      intersect_y << inter_y << ",";
     }
 
     for (int idx = 0; idx < data->range_count; idx += step){
@@ -854,25 +856,6 @@ for (int idx = 0; idx < data->range_count; idx += step)
 
     sample->weight *= p;
     total_weight += sample->weight;
-    // if (print){
-    //   char buffer[64]; // The filename buffer.
-    //   snprintf(buffer, sizeof(char) * 64, "/home/imad/projects/data/file%d.csv", j);
-    //   score_str << sample->weight;
-    //   output_file.open(buffer, std::ios_base::app);
-    //   output_file << j;
-    //   output_file << "," << pose.v[0] <<  "," << pose.v[1] << "," << pose.v[2];
-    //   output_file << "," << obs_scan_string.str();
-    //   output_file << "," << norm_obs_sstr.str();
-    //   output_file << "," << map_scan_string.str();
-    //   output_file << "," << norm_map_sstr.str();
-    //   output_file << score_str.str();
-    //   output_file << endl;
-    //   output_file.close();
-    //   obs_scan_string.flush();
-    //   norm_obs_sstr.flush();
-    //   map_scan_string.flush();
-    //   norm_map_sstr.flush();      
-    // }
     if (print){
       score_str << sample->weight;
       output_file << frame_id;
@@ -882,14 +865,17 @@ for (int idx = 0; idx < data->range_count; idx += step)
       output_file << "," << norm_obs_sstr.str();
       output_file << "," << map_scan_string.str();
       output_file << "," << norm_map_sstr.str();
+      output_file << "," << intersect_x.str();
+      output_file << "," << intersect_y.str();
       output_file << "," << score_str.str();
       output_file << endl;
       obs_scan_string.str(std::string());
       norm_obs_sstr.str(std::string());
       map_scan_string.str(std::string());
       norm_map_sstr.str(std::string());
+      intersect_x.str(std::string());
+      intersect_y.str(std::string());
       score_str.str(std::string());
-      
     }
   }
   frame_id++;
